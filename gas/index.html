@@ -1,0 +1,948 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{
+  --bg:#f4f5f7; --panel:#ffffff; --ink:#15181d; --sub:#5d6573; --line:#e1e4ea;
+  --accent:#0b5cad; --accent-ink:#ffffff; --warn:#b4560a; --danger:#b42318; --ok:#16794a;
+  --rA:#b42318; --rB:#c2620a; --rC:#0b5cad; --rD:#6b7280;
+  --chip:#eef1f5; --shadow:0 1px 2px rgba(0,0,0,.06),0 4px 14px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0f1115; --panel:#181b21; --ink:#e8eaee; --sub:#9aa3b2; --line:#2a2f38;
+    --accent:#4c9be8; --accent-ink:#0b0d10; --warn:#f0a35c; --danger:#f2766b; --ok:#4cc38a;
+    --rA:#f2766b; --rB:#f0a35c; --rC:#6fb1f0; --rD:#9aa3b2;
+    --chip:#22262e; --shadow:none;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif;
+  font-size:15px;line-height:1.55;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--accent)}
+.hidden{display:none!important}
+input[type=text],input[type=date],select,textarea{
+  width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--bg);outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:80px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 14px;border-radius:9px;border:1px solid var(--line);background:var(--panel);font-weight:600;font-size:14px;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--danger);border-color:var(--danger);background:transparent}
+.btn.ghost{background:transparent;border-color:transparent}
+.btn.sm{padding:6px 10px;font-size:13px}
+.btn:disabled{opacity:.5;cursor:default}
+.field{display:block;margin-bottom:12px}
+.field span{display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
+.hint{font-size:12px;color:var(--sub);margin-top:4px}
+
+/* 状態画面 */
+.center{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;text-align:center}
+.center .box{max-width:420px}
+.brand{font-weight:800;letter-spacing:.08em;font-size:12px;color:var(--accent)}
+.spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite;margin:18px auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ヘッダー */
+header.top{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line)}
+.topin{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:8px}
+.topin h1{font-size:17px;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topin h1 small{display:block;font-size:10px;letter-spacing:.1em;color:var(--accent);font-weight:800}
+.toggle{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--sub);user-select:none}
+.toggle input{width:18px;height:18px;accent-color:var(--accent)}
+main{max-width:1100px;margin:0 auto;padding:14px 16px 140px}
+.filters{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:12px}
+.filters .row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.meta-line{display:flex;justify-content:space-between;align-items:center;color:var(--sub);font-size:13px;margin:4px 2px 10px;gap:8px;flex-wrap:wrap}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.inbox{display:flex;align-items:center;gap:12px;background:color-mix(in srgb,var(--warn) 12%,var(--panel));border:1px solid var(--warn);border-radius:12px;padding:12px 14px;margin-bottom:12px;width:100%;text-align:left}
+.inbox b{color:var(--warn)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-align:left;box-shadow:var(--shadow);display:flex;gap:12px;align-items:flex-start;width:100%}
+.card:hover{border-color:var(--accent)}
+.card .body{flex:1;min-width:0}
+.card .name{font-weight:700;font-size:16px}
+.card .sub{color:var(--sub);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .foot{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.rank{flex:none;width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;border:2px solid currentColor}
+.rank.A{color:var(--rA)}.rank.B{color:var(--rB)}.rank.C{color:var(--rC)}.rank.D,.rank.none{color:var(--rD)}
+.yeartabs{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 12px;padding-bottom:2px}
+.ytab{flex:none;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:7px 14px;font-size:14px;font-weight:600;color:var(--sub)}
+.ytab.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.ytab small{font-weight:500;opacity:.8;margin-left:4px}
+.postabs .ytab{padding:6px 12px;font-size:13px}
+.postabs .ytab.on{background:color-mix(in srgb,var(--accent) 14%,var(--panel));color:var(--accent);border-color:var(--accent)}
+.ytab.zero{opacity:.45}
+.chip{display:inline-block;background:var(--chip);border-radius:999px;padding:2px 9px;font-size:12px;color:var(--sub)}
+.empty{text-align:center;color:var(--sub);padding:44px 10px;border:1px dashed var(--line);border-radius:12px}
+.edit-only{display:none!important}
+body.editing .edit-only{display:inline-flex!important}
+
+/* 詳細 */
+#detail{position:fixed;inset:0;z-index:40;background:var(--bg);overflow-y:auto}
+.dhead{position:sticky;top:0;background:var(--panel);border-bottom:1px solid var(--line);z-index:2}
+.dwrap{max-width:1100px;margin:0 auto;padding:14px 16px 140px;display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:900px){.dwrap{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)}}
+.player-frame{position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:12px;overflow:hidden}
+.player-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.player-frame .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9aa3b2;font-size:14px;text-align:center;padding:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+.panel h2{font-size:14px;margin:0 0 10px;color:var(--sub);font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.now{margin:10px 2px 0;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.now .t{font-weight:700}
+.now .s{color:var(--sub);font-size:13px}
+.scenes{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.scene{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 11px;font-size:13px}
+.scene b{color:var(--accent);margin-right:5px;font-variant-numeric:tabular-nums}
+.vlist{display:flex;flex-direction:column;gap:6px}
+.vrow{display:flex;gap:6px;align-items:stretch}
+.vitem{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--panel);text-align:left;flex:1;min-width:0}
+.vitem.on{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+.thumb{width:96px;aspect-ratio:16/9;object-fit:cover;border-radius:6px;background:#1d2128;flex:none;display:flex;align-items:center;justify-content:center;color:#9aa3b2;font-size:11px;overflow:hidden}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.vitem .vt{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.vitem .vs{font-size:12px;color:var(--sub)}
+.vitem .grow{flex:1;min-width:0}
+dl.info{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0;font-size:14px}
+dl.info dt{color:var(--sub)}
+dl.info dd{margin:0}
+.memo{white-space:pre-wrap;font-size:14px}
+.grades{display:grid;grid-template-columns:auto 1fr auto;gap:6px 10px;align-items:center;font-size:14px}
+.gbar{height:8px;border-radius:4px;background:var(--chip);overflow:hidden}
+.gbar i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.gnum{font-weight:700;font-variant-numeric:tabular-nums;min-width:1.5em;text-align:right}
+.meas{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:12px}
+.meas div{background:var(--chip);border-radius:9px;padding:8px 10px}
+.meas small{display:block;color:var(--sub);font-size:11px}
+.meas b{font-size:18px;font-variant-numeric:tabular-nums}
+.st{font-weight:700}
+.st-最優先{color:var(--rA)}.st-獲得候補{color:var(--rB)}.st-要再視察{color:var(--rC)}.st-見送り{color:var(--rD)}
+.gsel{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.gsel label{white-space:nowrap}
+.gsel label{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--chip);border-radius:9px;padding:6px 10px;font-size:13px}
+.gsel select{width:auto;padding:4px 8px}
+.chks{display:flex;flex-wrap:wrap;gap:6px}
+.chks label{display:flex;align-items:center;gap:5px;background:var(--chip);border-radius:999px;padding:5px 11px;font-size:13px;cursor:pointer}
+.chks input{width:16px;height:16px;accent-color:var(--accent);margin:0}
+fieldset{border:1px solid var(--line);border-radius:10px;padding:10px 12px 4px;margin:0 0 12px}
+legend{font-size:12px;color:var(--sub);padding:0 4px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* 比較 */
+body.comparing .card{border-style:dashed}
+.card.sel{border:2px solid var(--accent)!important;background:color-mix(in srgb,var(--accent) 7%,var(--panel))}
+.cmpwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.cmp{border-collapse:collapse;font-size:13px;min-width:100%}
+table.cmp th,table.cmp td{border-bottom:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top;white-space:nowrap}
+table.cmp th{color:var(--sub);font-weight:600;position:sticky;left:0;background:var(--panel)}
+table.cmp td.best{font-weight:800;color:var(--accent)}
+
+/* アップロード */
+#uploads{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--panel);border-top:1px solid var(--line);box-shadow:0 -4px 14px rgba(0,0,0,.08);padding:10px 16px calc(10px + env(safe-area-inset-bottom));max-height:45vh;overflow:auto}
+#uploads .in{max-width:1100px;margin:0 auto}
+.up{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-size:13px;margin:6px 0}
+.up .bar{grid-column:1/-1;height:6px;background:var(--chip);border-radius:3px;overflow:hidden}
+.up .bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+.up.done .bar i{background:var(--ok)} .up.err .bar i{background:var(--danger)}
+
+/* モーダル */
+.modal{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}
+@media (min-width:640px){.modal{align-items:center}}
+.sheet{background:var(--panel);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:16px 16px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
+@media (min-width:640px){.sheet{border-radius:16px}}
+.sheet.wide{max-width:920px}
+.sheet h3{margin:0 0 14px;font-size:17px}
+.guide h4{margin:16px 0 6px;font-size:14px}
+.guide ol,.guide ul{margin:0;padding-left:1.3em;font-size:14px}
+.guide li{margin:3px 0}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font-size:13px;z-index:100;max-width:90vw;text-align:center}
+</style>
+</head>
+<body>
+
+<section id="loading" class="center"><div class="box">
+  <div class="brand">AGK SCOUT</div><h2 style="margin:4px 0">スカウト動画庫</h2>
+  <div class="spin"></div><div class="hint">読み込み中…</div>
+</div></section>
+
+<section id="error" class="center hidden"><div class="box">
+  <div class="brand">AGK SCOUT</div><h2 style="margin:4px 0 10px">開けませんでした</h2>
+  <p id="errMsg" style="color:var(--sub);font-size:14px"></p>
+  <button class="btn primary" onclick="location.reload()">もう一度読み込む</button>
+</div></section>
+
+<section id="login" class="center hidden"><div class="box" style="width:100%;max-width:360px;text-align:left">
+  <div class="panel" style="padding:26px 22px">
+    <div class="brand">AGK SCOUT</div><h2 style="margin:4px 0 4px">スカウト動画庫</h2>
+    <form id="loginForm" autocomplete="off">
+      <p class="hint" style="margin:0 0 16px">スタッフ専用です。パスワードを入力してください。</p>
+      <label class="field"><span>パスワード</span><input type="password" id="pwIn" required
+        style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--bg)"></label>
+      <label class="toggle" style="margin-bottom:14px"><input type="checkbox" id="remember" checked>この端末では次から入力しない</label>
+      <button class="btn primary" id="loginBtn" style="width:100%;padding:12px">開く</button>
+      <div class="hint" id="loginErr" style="color:var(--danger);min-height:20px"></div>
+    </form>
+    <form id="setupForm" class="hidden" autocomplete="off">
+      <p class="hint" style="margin:0 0 16px">初回設定です。2種類のパスワードを決めてください（どちらも8文字以上・別々のもの）。</p>
+      <label class="field"><span>編集用パスワード（動画アップ・評価入力ができる）</span><input type="password" id="sEdit" required minlength="8"
+        style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--bg)"></label>
+      <label class="field"><span>編集用パスワード（もう一度）</span><input type="password" id="sEdit2" required
+        style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--bg)"></label>
+      <label class="field"><span>閲覧用パスワード（見るだけ）</span><input type="password" id="sView" required minlength="8"
+        style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--bg)"></label>
+      <button class="btn primary" style="width:100%;padding:12px">設定して開く</button>
+      <div class="hint" id="setupErr" style="color:var(--danger);min-height:20px"></div>
+    </form>
+  </div>
+</div></section>
+
+<!-- 一覧 -->
+<section id="app" class="hidden">
+  <header class="top"><div class="topin">
+    <h1><small>AGK SCOUT</small>スカウト動画庫</h1>
+    <button class="btn ghost sm" id="refreshBtn" title="最新にする">更新</button>
+    <button class="btn ghost sm" id="guideBtn">使い方</button>
+    <label class="toggle hidden" id="editWrap"><input type="checkbox" id="editToggle">編集</label>
+    <button class="btn ghost sm" id="logoutBtn">ログアウト</button>
+  </div></header>
+  <main>
+    <button class="inbox hidden" id="inboxBtn"></button>
+    <div class="yeartabs" id="yearTabs"></div>
+    <div class="yeartabs postabs" id="posTabs"></div>
+    <div class="filters">
+      <input type="text" id="q" placeholder="選手名・所属・メモ・大会名で検索">
+      <div class="row">
+        <select id="fRank"><option value="">全評価</option><option>A</option><option>B</option><option>C</option><option>D</option></select>
+        <select id="fStatus"><option value="">全ステータス</option></select>
+        <select id="fSort">
+          <option value="recent">新しい動画順</option>
+          <option value="rank">評価順</option>
+          <option value="status">ステータス順</option>
+          <option value="name">名前順</option>
+        </select>
+      </div>
+    </div>
+    <div class="meta-line">
+      <span id="count"></span>
+      <span class="btnrow">
+        <button class="btn sm" id="cmpBtn">比較</button>
+        <button class="btn sm hidden" id="cmpCancel">やめる</button>
+        <button class="btn sm primary hidden" id="cmpGo">比較する</button>
+        <button class="btn sm edit-only" id="settingsBtn">設定</button>
+        <button class="btn sm edit-only" id="upInboxBtn">＋ 動画をアップ</button>
+        <button class="btn sm primary edit-only" id="addPlayerBtn">＋ 選手を追加</button>
+      </span>
+    </div>
+    <div class="grid" id="grid"></div>
+  </main>
+</section>
+
+<!-- 選手詳細 -->
+<section id="detail" class="hidden">
+  <header class="dhead"><div class="topin">
+    <button class="btn ghost" id="backBtn">‹ 一覧</button>
+    <h1 id="dName"></h1>
+    <button class="btn sm edit-only" id="editPlayerBtn">選手を編集</button>
+  </div></header>
+  <div class="dwrap">
+    <div>
+      <div class="player-frame" id="frame"><div class="ph">動画を選択してください</div></div>
+      <div class="now" id="now"></div>
+      <div class="scenes" id="scenes"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="panel">
+        <h2>動画 <span class="btnrow"><button class="btn sm primary hidden" id="upPlayerBtn">＋ 動画をアップ</button></span></h2>
+        <div class="vlist" id="vlist"></div>
+      </div>
+      <div class="panel">
+        <h2>スカウト評価 <span class="st" id="dStatus"></span></h2>
+        <div id="grades"></div>
+        <div class="meas" id="meas"></div>
+      </div>
+      <div class="panel"><h2>選手情報</h2><dl class="info" id="info"></dl></div>
+      <div class="panel"><h2>評価メモ</h2><div class="memo" id="memo"></div></div>
+    </div>
+  </div>
+</section>
+
+<div id="uploads" class="hidden"><div class="in">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <b style="font-size:14px" id="upTitle">アップロード中</b>
+    <button class="btn sm ghost hidden" id="upClose">閉じる</button>
+  </div>
+  <div id="upList"></div>
+</div></div>
+
+<input type="file" id="fileIn" accept="video/*" multiple class="hidden">
+<div id="modalRoot"></div>
+
+<script>
+(() => {
+"use strict";
+const POSITIONS = ["投手","捕手","一塁手","二塁手","三塁手","遊撃手","外野手","内野手"];
+const STATUSES = ["視察予定","要再視察","獲得候補","最優先","見送り"];
+const GRADES = {
+  p: [["velo","球速"],["cmd","制球"],["brk","変化球"],["stuff","球のキレ"],["stam","スタミナ"]],
+  f: [["hit","ミート"],["pow","パワー"],["run","走力"],["def","守備"],["arm","肩"]],
+  c: [["fut","将来性"]]
+};
+const GRADE_LABEL = ["","1 物足りない","2 やや劣る","3 平均","4 良い","5 突出"];
+const MEAS = [
+  {k:"maxVelo", label:"最速",     unit:"km/h", g:"p", better:"high"},
+  {k:"avgVelo", label:"平均球速", unit:"km/h", g:"p", better:"high"},
+  {k:"quick",   label:"クイック", unit:"秒",   g:"p", better:"low"},
+  {k:"first",   label:"一塁到達", unit:"秒",   g:"f", better:"low"},
+  {k:"pop",     label:"二塁送球", unit:"秒",   g:"f", better:"low"},
+  {k:"m50",     label:"50m走",    unit:"秒",   g:"f", better:"low"},
+  {k:"throw",   label:"遠投",     unit:"m",    g:"f", better:"high"}
+];
+const CHUNK = 8 * 1024 * 1024; /* 8MB（256KBの倍数） */
+const DRIVE = "https:" + "/" + "/drive.google.com/file/d/";
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const run = (fn, ...args) => new Promise((res, rej) =>
+  google.script.run.withSuccessHandler(res).withFailureHandler(e => rej(e && e.message ? e : new Error(String(e))))[fn](...args));
+const grp = (p) => p.position === "投手" ? "p" : "f";
+const gradeDefs = (p) => [...GRADES[grp(p)], ...GRADES.c];
+const measDefs = (p) => MEAS.filter(m => m.g === grp(p));
+const measVal = (p, m) => { const v = p.meas && p.meas[m.k]; return v === "" || v == null ? null : +v; };
+const jstDate = (iso) => iso ? new Date(new Date(iso).getTime() + 9 * 3600e3).toISOString().slice(0, 10) : "";
+const today = () => jstDate(new Date().toISOString());
+const stripExt = (n) => String(n || "").replace(/\.[^.]+$/, "");
+const PW_KEY = "agk-scout-pw";
+let pw = "";
+try { pw = localStorage.getItem(PW_KEY) || sessionStorage.getItem(PW_KEY) || ""; } catch (e) {}
+const call = (fn, ...args) => run(fn, pw, ...args);
+
+let raw = null;          /* サーバーからの生データ */
+let players = [];        /* 表示用 */
+let inbox = [];
+let current = null, currentVideo = null;
+let comparing = false; const sel = new Set();
+
+/* ---------- 読み込み ---------- */
+async function load(silent) {
+  try {
+    raw = await call("api_load");
+    build();
+    $("loading").classList.add("hidden"); $("error").classList.add("hidden"); $("app").classList.remove("hidden");
+    $("editWrap").classList.toggle("hidden", !raw.canEdit);
+    $("upPlayerBtn").classList.toggle("hidden", !raw.canEdit);
+    fillFilters(); renderList();
+    if (current) { if (players.some(p => p.id === current)) openPlayer(current, true); else closeDetail(); }
+    if (silent) toast("最新の状態にしました");
+  } catch (e) {
+    if (/BAD_PASSWORD|NEEDS_SETUP|ロック/.test(e.message)) return showLogin(e.message);
+    if (silent) return toast("読み込めませんでした：" + e.message);
+    $("loading").classList.add("hidden"); $("error").classList.remove("hidden");
+    $("errMsg").textContent = e.message;
+  }
+}
+
+/* ---------- ログイン ---------- */
+function forgetPw() { pw = ""; try { localStorage.removeItem(PW_KEY); sessionStorage.removeItem(PW_KEY); } catch (e) {} }
+async function showLogin(reason) {
+  forgetPw();
+  ["loading","error","app","detail"].forEach(id => $(id).classList.add("hidden"));
+  $("login").classList.remove("hidden");
+  let needsSetup = /NEEDS_SETUP/.test(reason || "");
+  if (!reason) { try { needsSetup = (await run("api_status")).needsSetup; } catch (e) {} }
+  $("loginForm").classList.toggle("hidden", needsSetup);
+  $("setupForm").classList.toggle("hidden", !needsSetup);
+  $("loginErr").textContent = /BAD_PASSWORD/.test(reason || "") ? "パスワードが違います。" : (/ロック/.test(reason || "") ? reason : "");
+  if (!needsSetup) setTimeout(() => $("pwIn").focus(), 50);
+}
+$("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const b = $("loginBtn"); b.disabled = true; b.textContent = "確認中…"; $("loginErr").textContent = "";
+  pw = $("pwIn").value;
+  try { (($("remember").checked) ? localStorage : sessionStorage).setItem(PW_KEY, pw); } catch (err) {}
+  $("pwIn").value = "";
+  $("login").classList.add("hidden"); $("loading").classList.remove("hidden");
+  await load();
+  b.disabled = false; b.textContent = "開く";
+});
+$("setupForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const ep = $("sEdit").value, vp = $("sView").value; $("setupErr").textContent = "";
+  if (ep !== $("sEdit2").value) return $("setupErr").textContent = "編集用パスワードが2回で一致しません。";
+  try {
+    await run("api_setPasswords", "", ep, vp);
+    pw = ep; try { localStorage.setItem(PW_KEY, pw); } catch (err) {}
+    $("login").classList.add("hidden"); $("loading").classList.remove("hidden");
+    await load(); toast("パスワードを設定しました", 4000);
+  } catch (err) { $("setupErr").textContent = err.message; }
+});
+$("logoutBtn").onclick = () => { if (uploading) return toast("アップロード中はログアウトできません"); forgetPw(); location.reload(); };
+
+function toVideo(f) {
+  const m = raw.meta.videos[f.id] || {};
+  const dur = +f.durationMillis;
+  return {id:f.id, fileName:f.name, link:DRIVE + f.id + "/view", thumb:f.thumbnailLink || "", dur: dur ? Math.round(dur / 1000) : 0,
+    createdTime:f.createdTime, title:m.title || stripExt(f.name), date:m.date || jstDate(f.createdTime),
+    event:m.event || "", scenes:m.scenes || [], note:m.note || "", parent:(f.parents || [])[0]};
+}
+function build() {
+  const vids = raw.videos.map(toVideo);
+  players = raw.folders.map(f => Object.assign({}, raw.meta.players[f.id] || {}, {
+    id:f.id, name:f.name, createdTime:f.createdTime,
+    videos: vids.filter(v => v.parent === f.id)
+  }));
+  inbox = vids.filter(v => v.parent === raw.rootId).sort((a, b) => b.createdTime.localeCompare(a.createdTime));
+}
+$("refreshBtn").onclick = () => load(true);
+let lastVis = Date.now();
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && Date.now() - lastVis > 60000 && !$("modalRoot").innerHTML && !uploading) load(true);
+  lastVis = Date.now();
+});
+$("editToggle").onchange = () => document.body.classList.toggle("editing", $("editToggle").checked);
+
+async function saveMeta(kind, id, obj, msg) {
+  toast("保存中…", 20000);
+  try {
+    raw.meta = await call("api_saveMeta", kind, id, obj);
+    build(); renderList(); if (current) openPlayer(current, true);
+    toast(msg || "保存しました");
+  } catch (e) { toast("保存できませんでした：" + e.message, 5000); throw e; }
+}
+
+/* ---------- 一覧 ---------- */
+const latestDate = (p) => p.videos.reduce((m, v) => v.date > m ? v.date : m, "");
+function fillFilters() {
+  const fs = $("fStatus"); if (fs.options.length < 2)
+    fs.innerHTML = '<option value="">全ステータス</option>' + STATUSES.map(x => `<option>${x}</option>`).join("");
+}
+/* ---------- 年度タブ ---------- */
+const YEAR_KEY = "agk-scout-year";
+let yearSel = null;
+const yearsOf = () => [...new Set(players.map(p => p.year).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+function renderYearTabs() {
+  const ys = yearsOf();
+  if (yearSel === null) {
+    let saved = null; try { saved = localStorage.getItem(YEAR_KEY); } catch (e) {}
+    yearSel = saved !== null ? saved : (ys[0] || "");
+  }
+  if (yearSel && yearSel !== "none" && !ys.includes(yearSel)) yearSel = ys[0] || "";
+  const noYear = players.filter(p => !p.year).length;
+  const tabs = ys.map(y => [y, y + "年度", players.filter(p => p.year === y).length]);
+  if (noYear && ys.length) tabs.push(["none", "年度未設定", noYear]);
+  tabs.push(["", "すべて", players.length]);
+  $("yearTabs").classList.toggle("hidden", !ys.length);
+  $("yearTabs").innerHTML = tabs.map(([v, l, n]) =>
+    `<button class="ytab${yearSel === v ? " on" : ""}" data-y="${esc(v)}">${esc(l)}<small>${n}</small></button>`).join("");
+}
+/* ---------- ポジションタブ ---------- */
+const POS_GROUPS = [["投手", ["投手"]], ["捕手", ["捕手"]], ["内野手", ["一塁手","二塁手","三塁手","遊撃手","内野手"]], ["外野手", ["外野手"]]];
+let posSel = "";
+const allPos = (p) => [p.position, ...(p.subPos || [])].filter(Boolean);
+const posLabel = (p) => p.position ? p.position + ((p.subPos || []).length ? "（" + p.subPos.join("・") + "）" : "") : "";
+const inPos = (p, g) => g === "none" ? !p.position : (!g || allPos(p).some(x => (POS_GROUPS.find(y => y[0] === g) || [0, []])[1].includes(x)));
+function renderPosTabs(base) {
+  const tabs = [["", "全ポジション", base.length], ...POS_GROUPS.map(([g]) => [g, g, base.filter(p => inPos(p, g)).length])];
+  const none = base.filter(p => !p.position).length;
+  if (none) tabs.push(["none", "ポジション未設定", none]);
+  $("posTabs").innerHTML = tabs.map(([v, l, n]) =>
+    `<button class="ytab${posSel === v ? " on" : ""}${n ? "" : " zero"}" data-p="${esc(v)}">${esc(l)}<small>${n}</small></button>`).join("");
+}
+$("posTabs").addEventListener("click", (e) => {
+  const b = e.target.closest(".ytab"); if (!b) return;
+  posSel = b.dataset.p; renderList();
+});
+
+$("yearTabs").addEventListener("click", (e) => {
+  const b = e.target.closest(".ytab"); if (!b) return;
+  yearSel = b.dataset.y; try { localStorage.setItem(YEAR_KEY, yearSel); } catch (err) {}
+  renderList();
+});
+
+function renderList() {
+  document.body.classList.toggle("comparing", comparing);
+  renderYearTabs();
+  const ib = $("inboxBtn");
+  ib.classList.toggle("hidden", !inbox.length);
+  ib.innerHTML = `<span style="flex:1"><b>未分類の動画が ${inbox.length}本 あります</b><br><span class="hint">タップして選手に振り分けてください</span></span><span>›</span>`;
+
+  const q = $("q").value.trim().toLowerCase(), rk = $("fRank").value, fst = $("fStatus").value, sort = $("fSort").value;
+  const inYear = players.filter(p => yearSel === "none" ? !p.year : (!yearSel || p.year === yearSel));
+  renderPosTabs(inYear);
+  let list = inYear.filter(p => {
+    if (!inPos(p, posSel)) return false;
+    if (rk && p.rank !== rk) return false;
+    if (fst && p.status !== fst) return false;
+    if (!q) return true;
+    return [p.name, p.kana, p.team, ...allPos(p), p.memo, p.scout, ...p.videos.map(v => v.title + " " + v.event)].join(" ").toLowerCase().includes(q);
+  });
+  const rv = {A:0, B:1, C:2, D:3}, so = {"最優先":0,"獲得候補":1,"要再視察":2,"視察予定":3,"見送り":5};
+  list.sort(sort === "name" ? (a, b) => (a.kana || a.name).localeCompare(b.kana || b.name, "ja")
+    : sort === "rank" ? (a, b) => (rv[a.rank] ?? 9) - (rv[b.rank] ?? 9) || latestDate(b).localeCompare(latestDate(a))
+    : sort === "status" ? (a, b) => (so[a.status] ?? 4) - (so[b.status] ?? 4) || (rv[a.rank] ?? 9) - (rv[b.rank] ?? 9)
+    : (a, b) => latestDate(b).localeCompare(latestDate(a)) || (b.createdTime || "").localeCompare(a.createdTime || ""));
+  $("count").textContent = `${list.length}人 / ${yearSel === "none" ? "年度未設定 " : (yearSel ? yearSel + "年度 " : "全")}${inYear.length}人`;
+  if (!players.length) {
+    $("grid").innerHTML = `<div class="empty" style="grid-column:1/-1">まだ選手がいません。<br>${raw.canEdit ? "右上の「編集」をオンにして「＋ 選手を追加」から登録するか、<br>ドライブの「スカウト動画」フォルダに選手名のフォルダを作ってください。" : ""}</div>`;
+    return;
+  }
+  if (!list.length) { $("grid").innerHTML = `<div class="empty" style="grid-column:1/-1">条件に合う選手がいません。</div>`; return; }
+  $("grid").innerHTML = list.map(p => {
+    const ld = latestDate(p), m1 = measDefs(p).find(m => measVal(p, m) != null);
+    return `<button class="card${sel.has(p.id) ? " sel" : ""}" data-id="${p.id}">
+      <span class="rank ${p.rank || "none"}">${esc(p.rank || "–")}</span>
+      <span class="body">
+        <div class="name">${esc(p.name)}</div>
+        <div class="sub">${esc([p.team, posLabel(p), p.batsThrows].filter(Boolean).join(" ・ ") || "—")}</div>
+        <div class="foot">${p.status ? `<span class="chip st st-${esc(p.status)}">${esc(p.status)}</span>` : ""}${m1 ? `<span class="chip">${m1.label} ${measVal(p, m1)}${m1.unit}</span>` : ""}<span class="chip">動画 ${p.videos.length}本</span>${ld ? `<span class="chip">最新 ${esc(ld)}</span>` : ""}</div>
+      </span></button>`;
+  }).join("");
+}
+["q","fRank","fStatus","fSort"].forEach(id => $(id).addEventListener("input", renderList));
+$("grid").addEventListener("click", (e) => {
+  const c = e.target.closest(".card"); if (!c) return;
+  if (!comparing) return openPlayer(c.dataset.id);
+  const id = c.dataset.id;
+  if (sel.has(id)) sel.delete(id); else if (sel.size >= 4) return toast("比較できるのは4人までです"); else sel.add(id);
+  updateCmpCtl(); renderList();
+});
+
+/* ---------- 詳細 ---------- */
+const getP = (id) => players.find(p => p.id === id);
+const fmtTime = (t) => { const h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), s = t % 60;
+  return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(s).padStart(2, "0"); };
+function thumbHtml(v) {
+  return `<span class="thumb">${v.thumb ? `<img loading="lazy" src="${esc(v.thumb)}" alt="" onerror="this.remove()">` : ""}${v.dur ? "" : ""}</span>`;
+}
+function openPlayer(id, keep) {
+  current = id; const p = getP(id); if (!p) return closeDetail();
+  $("detail").classList.remove("hidden"); document.body.style.overflow = "hidden";
+  $("dName").textContent = p.name;
+  const vids = [...p.videos].sort((a, b) => (b.date || "").localeCompare(a.date || "") || b.createdTime.localeCompare(a.createdTime));
+  $("vlist").innerHTML = vids.length ? vids.map(v => `<div class="vrow">
+      <button class="vitem${currentVideo === v.id ? " on" : ""}" data-v="${v.id}">${thumbHtml(v)}
+        <span class="grow"><div class="vt">${esc(v.title)}</div>
+        <div class="vs">${esc([v.date, v.event, v.dur ? fmtTime(v.dur) : ""].filter(Boolean).join(" ・ "))}${v.scenes.length ? ` ・ シーン${v.scenes.length}` : ""}</div></span>
+      </button>
+      <button class="btn sm edit-only" data-ev="${v.id}">編集</button></div>`).join("")
+    : `<div class="hint">動画がまだありません。${raw.canEdit ? "「＋ 動画をアップ」から追加するか、ドライブの「" + esc(p.name) + "」フォルダに入れてください。" : ""}</div>`;
+  const rows = [["対象年度", p.year ? p.year + "年度" : ""], ["所属", p.team], ["ポジション", p.position], ["ほかに守れる", (p.subPos || []).join("・")], ["投打", p.batsThrows], ["学年・年齢", p.grade],
+    ["身長・体重", p.body], ["総合評価", p.rank], ["担当スカウト", p.scout], ["ふりがな", p.kana]].filter(r => r[1]);
+  $("info").innerHTML = rows.map(r => `<dt>${r[0]}</dt><dd>${esc(r[1])}</dd>`).join("") || `<dd class="hint">未入力</dd>`;
+  $("memo").textContent = p.memo || "—";
+  $("dStatus").className = "st st-" + (p.status || ""); $("dStatus").textContent = p.status || "";
+  const gd = gradeDefs(p).filter(([k]) => p.grades && p.grades[k]);
+  $("grades").innerHTML = gd.length ? `<div class="grades">${gd.map(([k, l]) =>
+    `<span>${l}</span><span class="gbar"><i style="width:${p.grades[k] * 20}%"></i></span><span class="gnum">${p.grades[k]}</span>`).join("")}</div>`
+    : `<div class="hint">未評価</div>`;
+  $("meas").innerHTML = measDefs(p).filter(m => measVal(p, m) != null)
+    .map(m => `<div><small>${m.label}</small><b>${measVal(p, m)}</b> ${m.unit}</div>`).join("");
+  if (!keep || !vids.some(v => v.id === currentVideo)) {
+    currentVideo = null; $("frame").innerHTML = '<div class="ph">動画を選択してください</div>'; $("now").innerHTML = ""; $("scenes").innerHTML = "";
+    if (vids[0]) selectVideo(vids[0].id);
+  } else selectVideo(currentVideo, true);
+}
+function playVideo(v, start) {
+  const src = DRIVE + encodeURIComponent(v.id) + "/preview" + (start ? "?t=" + start : "");
+  $("frame").innerHTML = '<iframe src="' + src + '" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="動画"></iframe>';
+}
+function selectVideo(vid, keepFrame) {
+  const p = getP(current); const v = p.videos.find(x => x.id === vid); if (!v) return;
+  const changed = currentVideo !== vid; currentVideo = vid;
+  document.querySelectorAll(".vitem").forEach(el => el.classList.toggle("on", el.dataset.v === vid));
+  if (changed || !keepFrame) playVideo(v);
+  $("now").innerHTML = `<div><div class="t">${esc(v.title)}</div><div class="s">${esc([v.date, v.event].filter(Boolean).join(" ・ "))}</div>
+    ${v.note ? `<div class="s" style="white-space:pre-wrap;margin-top:4px">${esc(v.note)}</div>` : ""}</div>
+    <a class="btn sm" href="${esc(v.link)}" target="_blank" rel="noopener">ドライブで開く</a>`;
+  $("scenes").innerHTML = v.scenes.map(s => `<button class="scene" data-t="${s.t}"><b>${fmtTime(s.t)}</b>${esc(s.label)}</button>`).join("");
+}
+$("vlist").addEventListener("click", (e) => {
+  const ev = e.target.closest("[data-ev]"); if (ev) return videoForm(ev.dataset.ev);
+  const it = e.target.closest(".vitem"); if (it) { selectVideo(it.dataset.v); $("detail").scrollTo({top:0, behavior:"smooth"}); }
+});
+$("scenes").addEventListener("click", (e) => {
+  const b = e.target.closest(".scene"); if (!b) return;
+  playVideo(getP(current).videos.find(x => x.id === currentVideo), +b.dataset.t);
+  $("detail").scrollTo({top:0, behavior:"smooth"});
+});
+function closeDetail() {
+  $("detail").classList.add("hidden"); document.body.style.overflow = "";
+  $("frame").innerHTML = '<div class="ph">動画を選択してください</div>'; current = null; currentVideo = null;
+  renderList();
+}
+$("backBtn").onclick = closeDetail;
+$("editPlayerBtn").onclick = () => playerForm(current);
+$("addPlayerBtn").onclick = () => playerForm(null);
+
+/* ---------- 未分類トレイ ---------- */
+$("inboxBtn").onclick = inboxView;
+function inboxView() {
+  const opts = players.slice().sort((a, b) => a.name.localeCompare(b.name, "ja"))
+    .map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join("");
+  modal(`<h3>未分類の動画（${inbox.length}本）</h3>
+    <div class="hint" style="margin-bottom:10px">ドライブの「スカウト動画」フォルダに直接入った動画です。選手を選んで「移動」すると、その選手のフォルダに入ります。</div>
+    <div class="vlist">${inbox.map(v => `<div class="panel" style="padding:10px">
+      <div style="display:flex;gap:10px;align-items:center">${thumbHtml(v)}
+        <div style="flex:1;min-width:0"><div class="vt" style="font-weight:600;word-break:break-all">${esc(v.fileName)}</div>
+        <div class="hint">${esc(jstDate(v.createdTime))}${v.dur ? " ・ " + fmtTime(v.dur) : ""} ・ <a href="${esc(v.link)}" target="_blank" rel="noopener">再生</a></div></div></div>
+      ${raw.canEdit ? `<div style="display:flex;gap:8px;margin-top:8px">
+        <select data-to="${v.id}"><option value="">選手を選ぶ…</option>${opts}<option value="__new">＋ 新しい選手を作る</option></select>
+        <button type="button" class="btn sm primary" data-mv="${v.id}">移動</button></div>` : ""}
+    </div>`).join("")}</div>
+    <div class="btnrow" style="justify-content:flex-end;margin-top:12px"><button type="button" class="btn" data-close>閉じる</button></div>`,
+  () => {}, (f, close) => {
+    f.querySelectorAll("[data-mv]").forEach(b => b.onclick = async () => {
+      const vid = b.dataset.mv; let to = f.querySelector(`[data-to="${vid}"]`).value;
+      if (!to) return toast("選手を選んでください");
+      b.disabled = true; b.textContent = "移動中…";
+      try {
+        if (to === "__new") {
+          const name = prompt("新しい選手の名前"); if (!name) { b.disabled = false; b.textContent = "移動"; return; }
+          to = await call("api_createPlayer", name, null);
+        }
+        await call("api_moveVideo", vid, to);
+        close(); await load(); toast("移動しました");
+        if (inbox.length) inboxView();
+      } catch (e) { toast("移動できませんでした：" + e.message, 5000); b.disabled = false; b.textContent = "移動"; }
+    });
+  });
+}
+
+/* ---------- アップロード ---------- */
+let uploadTarget = null, uploading = 0;
+$("upPlayerBtn").onclick = () => { uploadTarget = current; $("fileIn").click(); };
+$("upInboxBtn").onclick = () => { uploadTarget = raw.rootId; $("fileIn").click(); };
+$("fileIn").onchange = () => {
+  const files = [...$("fileIn").files]; $("fileIn").value = "";
+  if (files.length) startUploads(files, uploadTarget || raw.rootId);
+};
+$("upClose").onclick = () => { $("uploads").classList.add("hidden"); $("upList").innerHTML = ""; };
+window.addEventListener("beforeunload", (e) => { if (uploading) { e.preventDefault(); e.returnValue = ""; } });
+
+async function startUploads(files, folderId) {
+  $("uploads").classList.remove("hidden"); $("upClose").classList.add("hidden");
+  $("upTitle").textContent = "アップロード中（画面を閉じないでください）";
+  const rows = files.map(f => {
+    const el = document.createElement("div"); el.className = "up";
+    el.innerHTML = `<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.name)}</span><span class="pct">待機中</span><span class="bar"><i></i></span>`;
+    $("upList").appendChild(el); return el;
+  });
+  uploading += files.length;
+  let ok = 0;
+  for (let i = 0; i < files.length; i++) {
+    const el = rows[i], pct = el.querySelector(".pct"), bar = el.querySelector("i");
+    try {
+      await uploadOne(files[i], folderId, (r) => { pct.textContent = Math.floor(r * 100) + "%"; bar.style.width = (r * 100) + "%"; });
+      el.classList.add("done"); pct.textContent = "完了"; bar.style.width = "100%"; ok++;
+    } catch (e) {
+      el.classList.add("err"); pct.textContent = "失敗"; el.title = e.message;
+    }
+    uploading--;
+  }
+  $("upTitle").textContent = `アップロード完了（${ok}/${files.length}本）` + (ok < files.length ? " ― 失敗した分はもう一度アップしてください" : "");
+  $("upClose").classList.remove("hidden");
+  await load();
+  if (ok) toast("アップしました。ドライブ側の処理が終わるまで数分は再生できないことがあります。", 6000);
+}
+
+function xhr(method, url, headers, body, onProgress) {
+  return new Promise((resolve, reject) => {
+    const x = new XMLHttpRequest(); x.open(method, url);
+    Object.entries(headers || {}).forEach(([k, v]) => x.setRequestHeader(k, v));
+    if (onProgress) x.upload.onprogress = (e) => onProgress(e.loaded);
+    x.onload = () => resolve(x); x.onerror = () => reject(new Error("通信エラー")); x.ontimeout = () => reject(new Error("タイムアウト"));
+    x.send(body);
+  });
+}
+async function uploadOne(file, folderId, onProgress) {
+  const type = file.type || "video/quicktime";
+  const loc = await call("api_startUpload", {name:file.name, size:file.size, type, folderId, origin:location.origin});
+  let start = 0;
+  while (start < file.size) {
+    const end = Math.min(start + CHUNK, file.size);
+    let res, tries = 0;
+    for (;;) {
+      try {
+        res = await xhr("PUT", loc, {"Content-Range": `bytes ${start}-${end - 1}/${file.size}`}, file.slice(start, end),
+          (n) => onProgress((start + n) / file.size));
+        if (res.status === 308 || res.status === 200 || res.status === 201) break;
+        throw new Error("status " + res.status);
+      } catch (e) {
+        if (++tries >= 4) throw e;
+        await new Promise(r => setTimeout(r, 1500 * tries));
+      }
+    }
+    if (res.status === 200 || res.status === 201) {
+      onProgress(1);
+      const out = JSON.parse(res.responseText || "{}");
+      if (out.id) await call("api_afterUpload", out.id);
+      return out;
+    }
+    const range = res.getResponseHeader("Range");
+    start = range ? +range.split("-")[1] + 1 : end;
+  }
+}
+
+/* ---------- 比較 ---------- */
+function updateCmpCtl() {
+  $("cmpBtn").classList.toggle("hidden", comparing);
+  $("cmpCancel").classList.toggle("hidden", !comparing);
+  $("cmpGo").classList.toggle("hidden", !comparing);
+  $("cmpGo").disabled = sel.size < 2;
+  $("cmpGo").textContent = `比較する（${sel.size}人）`;
+}
+$("cmpBtn").onclick = () => { comparing = true; sel.clear(); updateCmpCtl(); renderList(); toast("比較したい選手を2〜4人タップしてください"); };
+$("cmpCancel").onclick = () => { comparing = false; sel.clear(); updateCmpCtl(); renderList(); };
+$("cmpGo").onclick = () => {
+  const ps = [...sel].map(getP).filter(Boolean);
+  const rows = [];
+  const row = (label, fn, cls) => rows.push(`<tr><th>${label}</th>${ps.map((p, i) => `<td class="${cls ? cls(p, i) : ""}">${fn(p)}</td>`).join("")}</tr>`);
+  row("", p => `<button type="button" class="btn ghost" style="padding:0" data-open="${p.id}"><b style="font-size:15px">${esc(p.name)}</b></button>`);
+  [["対象年度","year"],["所属","team"],["ポジション","posLabel"],["投打","batsThrows"],["学年・年齢","grade"],["身長・体重","body"],["総合評価","rank"],["ステータス","status"],["担当","scout"]]
+    .forEach(([l, k]) => { const g = (p) => k === "posLabel" ? posLabel(p) : p[k];
+      if (ps.some(p => g(p))) row(l, p => esc(g(p) || "—")); });
+  const gkeys = []; ps.forEach(p => gradeDefs(p).forEach(g => { if (!gkeys.some(x => x[0] === g[0])) gkeys.push(g); }));
+  gkeys.forEach(([k, l]) => {
+    if (!ps.some(p => p.grades && p.grades[k])) return;
+    const vals = ps.map(p => +(p.grades && p.grades[k]) || 0), mx = Math.max(...vals);
+    row(l, p => (p.grades && p.grades[k]) ? "●".repeat(p.grades[k]) + `<span style="color:var(--line)">${"●".repeat(5 - p.grades[k])}</span>` : "—",
+      (p, i) => vals[i] && vals[i] === mx && vals.filter(v => v === mx).length < ps.length ? "best" : "");
+  });
+  MEAS.forEach(m => {
+    const vals = ps.map(p => measVal(p, m)); const ok = vals.filter(v => v != null); if (!ok.length) return;
+    const best = m.better === "high" ? Math.max(...ok) : Math.min(...ok);
+    row(`${m.label}（${m.unit}）`, p => measVal(p, m) ?? "—", (p, i) => vals[i] === best && ok.length > 1 ? "best" : "");
+  });
+  row("動画", p => `${p.videos.length}本`);
+  row("評価メモ", p => `<div style="white-space:pre-wrap;min-width:180px;max-width:260px">${esc(p.memo || "—")}</div>`);
+  modal(`<h3>選手比較</h3><div class="cmpwrap"><table class="cmp">${rows.join("")}</table></div>
+    <div class="hint" style="margin-top:8px">青字＝その項目でいちばん良い値。名前を押すと選手ページを開きます。</div>
+    <div class="btnrow" style="justify-content:flex-end;margin-top:12px"><button type="button" class="btn" data-close>閉じる</button></div>`,
+    () => {}, (f, close) => {
+      f.classList.add("wide");
+      f.querySelectorAll("[data-open]").forEach(b => b.onclick = () => { close(); openPlayer(b.dataset.open); });
+    });
+};
+
+/* ---------- 使い方 ---------- */
+$("guideBtn").onclick = () => modal(`<h3>使い方</h3><div class="guide">
+  <h4>動画の入れ方（どちらでもOK）</h4>
+  <ol>
+    <li><b>このアプリから</b>：選手ページの「＋ 動画をアップ」→ iPhoneの写真から動画を選ぶ（複数可）。アップ中は画面を閉じないでください</li>
+    <li><b>Googleドライブから</b>（管理者）：ドライブアプリで「スカウト動画」→ 選手名のフォルダを開き、「＋」→「アップロード」。アプリの「更新」を押すと表示されます</li>
+    <li>「スカウト動画」フォルダに直接入れた動画は「未分類」に出るので、あとから選手に振り分けられます</li>
+    <li>ドライブで選手名のフォルダを作れば、その選手がアプリに追加されます</li>
+  </ol>
+  <h4>撮影チェックリスト</h4>
+  <ul>
+    <li>打者：全打席（構え〜フォロースルーまで切らない）。バックネット裏か一塁/三塁側の高い位置から</li>
+    <li>投手：センター方向かバックネット裏から、リリースが見える位置で。可能なら球速表示も映す</li>
+    <li>守備機会・走塁も撮れたら残す（一塁到達・二塁送球はストップウォッチで計測）</li>
+    <li>撮影後、動画の「編集」でシーン（打席ごとの時間）をメモしておくと後で見返しやすい</li>
+    <li>長時間の動画は通信量が大きいので、アップはWi-Fiでがおすすめ</li>
+  </ul>
+  <h4>評価の目安（5段階）</h4>
+  <ul>
+    <li>5 突出 ／ 4 良い ／ 3 社会人で平均的 ／ 2 やや劣る ／ 1 物足りない</li>
+    <li>総合評価 A〜D とステータス（視察予定 → 要再視察 → 獲得候補 → 最優先 ／ 見送り）で進み具合を管理</li>
+  </ul>
+  <h4>その他</h4>
+  <ul>
+    <li>入力した内容は自動で保存され、スタッフ全員に反映されます</li>
+    <li>削除した選手・動画はドライブの「_削除済み」フォルダに移るだけなので、間違えても元に戻せます</li>
+  </ul></div>
+  <div class="btnrow" style="justify-content:space-between;margin-top:14px">
+    ${raw.rootUrl ? `<a class="btn" href="${esc(raw.rootUrl)}" target="_blank" rel="noopener">ドライブのフォルダを開く</a>` : "<span></span>"}
+    <button type="button" class="btn" data-close>閉じる</button></div>`, () => {});
+
+/* ---------- フォーム ---------- */
+function modal(html, onSubmit, onMount) {
+  const root = $("modalRoot");
+  root.innerHTML = `<div class="modal"><form class="sheet" autocomplete="off">${html}</form></div>`;
+  const form = root.querySelector("form");
+  const close = () => root.innerHTML = "";
+  root.querySelector(".modal").addEventListener("click", (e) => { if (e.target.classList.contains("modal")) close(); });
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = form.querySelector(".btn.primary[type=submit], button.primary:not([type])");
+    if (btn) btn.disabled = true;
+    try { if ((await onSubmit(form)) !== false) close(); } catch (err) { /* toast済み */ }
+    finally { if (btn) btn.disabled = false; }
+  });
+  form.querySelectorAll("[data-close]").forEach(b => b.onclick = close);
+  onMount && onMount(form, close);
+}
+const val = (f, n) => (f.elements[n] ? f.elements[n].value : "").trim();
+
+function playerForm(id) {
+  const p = id ? getP(id) : {};
+  const posOpts = POSITIONS.map(x => `<option ${p.position === x ? "selected" : ""}>${x}</option>`).join("");
+  const gv = (k) => (p.grades && p.grades[k]) || "";
+  const gradeSel = ([k, l]) => `<label>${l}<select name="g_${k}"><option value="">—</option>${[5,4,3,2,1].map(n =>
+    `<option value="${n}" ${+gv(k) === n ? "selected" : ""}>${GRADE_LABEL[n]}</option>`).join("")}</select></label>`;
+  modal(`
+    <h3>${id ? "選手を編集" : "選手を追加"}</h3>
+    <div class="two">
+      <label class="field"><span>選手名 *</span><input type="text" name="name" required value="${esc(p.name)}"></label>
+      <label class="field"><span>ふりがな</span><input type="text" name="kana" value="${esc(p.kana)}"></label>
+    </div>
+    <div class="two">
+      <label class="field"><span>対象年度（例：2027）</span><input type="text" inputmode="numeric" name="year" list="yearList" placeholder="2027"
+        value="${esc(id ? (p.year || "") : (yearSel && yearSel !== "none" ? yearSel : ""))}">
+        <datalist id="yearList">${yearsOf().map(y => `<option value="${esc(y)}">`).join("")}</datalist></label>
+      <label class="field"><span>所属（学校・チーム）</span><input type="text" name="team" value="${esc(p.team)}"></label>
+    </div>
+    <div class="two">
+      <label class="field"><span>メインのポジション</span><select name="position"><option value="">—</option>${posOpts}</select></label>
+      <label class="field"><span>投打</span><input type="text" name="batsThrows" placeholder="右投左打" value="${esc(p.batsThrows)}"></label>
+    </div>
+    <div class="field"><span>ほかに守れるポジション（いくつでも）</span>
+      <div class="chks">${POSITIONS.map(x => `<label><input type="checkbox" name="subPos" value="${x}" ${(p.subPos || []).includes(x) ? "checked" : ""}>${x}</label>`).join("")}</div>
+    </div>
+    <div class="two">
+      <label class="field"><span>学年・年齢</span><input type="text" name="grade" placeholder="大学4年" value="${esc(p.grade)}"></label>
+      <label class="field"><span>身長・体重</span><input type="text" name="body" placeholder="180cm 80kg" value="${esc(p.body)}"></label>
+    </div>
+    <div class="two">
+      <label class="field"><span>総合評価</span><select name="rank"><option value="">—</option>${["A","B","C","D"].map(r => `<option ${p.rank === r ? "selected" : ""}>${r}</option>`).join("")}</select></label>
+      <label class="field"><span>担当スカウト</span><input type="text" name="scout" value="${esc(p.scout)}"></label>
+    </div>
+    <label class="field"><span>ステータス</span><select name="status"><option value="">—</option>${STATUSES.map(s => `<option ${p.status === s ? "selected" : ""}>${s}</option>`).join("")}</select></label>
+    <fieldset><legend>5段階評価（3＝社会人で平均的）</legend>
+      ${["p","f"].map(g => `<div class="gsel" data-g="${g}">${GRADES[g].map(gradeSel).join("")}</div>`).join("")}
+      <div class="gsel" style="margin:8px 0">${GRADES.c.map(gradeSel).join("")}</div>
+    </fieldset>
+    <fieldset><legend>計測値</legend>
+      ${["p","f"].map(g => `<div class="two" data-g="${g}">${MEAS.filter(m => m.g === g).map(m =>
+        `<label class="field"><span>${m.label}（${m.unit}）</span><input type="text" inputmode="decimal" name="m_${m.k}" value="${esc(p.meas && p.meas[m.k])}"></label>`).join("")}</div>`).join("")}
+    </fieldset>
+    <label class="field"><span>評価メモ</span><textarea name="memo" rows="5">${esc(p.memo)}</textarea></label>
+    <div class="btnrow" style="justify-content:space-between;margin-top:6px">
+      ${id ? `<button type="button" class="btn danger" id="delP">削除</button>` : "<span></span>"}
+      <span class="btnrow"><button type="button" class="btn" data-close>キャンセル</button><button class="btn primary">保存</button></span>
+    </div>`,
+  async (f) => {
+    const name = val(f, "name");
+    const o = {kana:val(f,"kana"), team:val(f,"team"), position:val(f,"position"), batsThrows:val(f,"batsThrows"),
+      grade:val(f,"grade"), body:val(f,"body"), rank:val(f,"rank"), scout:val(f,"scout"), status:val(f,"status"),
+      subPos:[...f.querySelectorAll('input[name=subPos]:checked')].map(c => c.value).filter(x => x !== val(f,"position")),
+      year:val(f,"year").replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).replace(/[^\d]/g, "").slice(0, 4),
+      memo:f.elements.memo.value.trim(), grades:{}, meas:{}};
+    [...GRADES.p, ...GRADES.f, ...GRADES.c].forEach(([k]) => { const n = +val(f, "g_" + k); if (n) o.grades[k] = n; });
+    for (const m of MEAS) {
+      const r = val(f, "m_" + m.k).replace(/[０-９．]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).replace(/[^\d.]/g, "");
+      if (r && !isNaN(+r)) o.meas[m.k] = +r;
+    }
+    toast("保存中…", 20000);
+    try {
+      if (id) {
+        if (name !== p.name) await call("api_renamePlayer", id, name);
+        await saveMeta("players", id, o);
+        if (name !== p.name) await load();
+      } else {
+        const nid = await call("api_createPlayer", name, o);
+        await load(); openPlayer(nid); toast("追加しました");
+      }
+    } catch (e) { toast("保存できませんでした：" + e.message, 5000); return false; }
+  },
+  (f, close) => {
+    const pos = f.elements.position;
+    const sync = () => { const g = pos.value === "投手" ? "p" : "f";
+      f.querySelectorAll("[data-g]").forEach(el => el.classList.toggle("hidden", el.dataset.g !== g)); };
+    pos.addEventListener("change", sync); sync();
+    const d = f.querySelector("#delP"); if (d) d.onclick = async () => {
+      if (!confirm(`「${p.name}」を削除しますか？\n動画ごとドライブの「_削除済み」フォルダに移ります（元に戻せます）。`)) return;
+      try { await call("api_removePlayer", id); close(); closeDetail(); await load(); toast("削除しました"); }
+      catch (e) { toast("削除できませんでした：" + e.message, 5000); }
+    };
+  });
+}
+
+function videoForm(vid) {
+  const p = getP(current); const v = p.videos.find(x => x.id === vid);
+  const sceneTxt = v.scenes.map(s => `${fmtTime(s.t)} ${s.label}`).join("\n");
+  const moveOpts = `<option value="">（このまま）</option>` + players.filter(x => x.id !== p.id)
+    .sort((a, b) => a.name.localeCompare(b.name, "ja")).map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join("")
+    + `<option value="${raw.rootId}">未分類に戻す</option>`;
+  modal(`
+    <h3>動画を編集 <span class="hint">— ${esc(p.name)}</span></h3>
+    <label class="field"><span>タイトル</span><input type="text" name="title" value="${esc(v.title)}" placeholder="第1打席〜第4打席 / 先発5回"></label>
+    <div class="two">
+      <label class="field"><span>撮影日</span><input type="date" name="date" value="${esc(v.date)}"></label>
+      <label class="field"><span>大会・試合</span><input type="text" name="event" placeholder="秋季リーグ vs ○○大" value="${esc(v.event)}"></label>
+    </div>
+    <label class="field"><span>シーン（1行に「時間 内容」）</span>
+      <textarea name="scenes" rows="5" placeholder="0:45 第1打席 右中間二塁打&#10;12:30 第2打席 空振り三振&#10;1:05:10 守備 6-4-3">${esc(sceneTxt)}</textarea></label>
+    <label class="field"><span>この動画のメモ</span><textarea name="note" rows="3">${esc(v.note)}</textarea></label>
+    <label class="field"><span>別の選手へ移動</span><select name="move">${moveOpts}</select></label>
+    <div class="hint" style="margin-bottom:10px">ファイル名：${esc(v.fileName)}</div>
+    <div class="btnrow" style="justify-content:space-between">
+      <button type="button" class="btn danger" id="delV">削除</button>
+      <span class="btnrow"><button type="button" class="btn" data-close>キャンセル</button><button class="btn primary">保存</button></span>
+    </div>`,
+  async (f) => {
+    const o = {title:val(f,"title"), date:val(f,"date"), event:val(f,"event"), scenes:parseScenes(f.elements.scenes.value), note:f.elements.note.value.trim()};
+    try {
+      await saveMeta("videos", vid, o);
+      const mv = val(f, "move");
+      if (mv) { await call("api_moveVideo", vid, mv); currentVideo = null; await load(); toast("移動しました"); }
+    } catch (e) { return false; }
+  },
+  (f, close) => { f.querySelector("#delV").onclick = async () => {
+    if (!confirm("この動画を削除しますか？\nドライブの「_削除済み」フォルダに移ります（元に戻せます）。")) return;
+    try { await call("api_removeVideo", vid); close(); currentVideo = null; await load(); toast("削除しました"); }
+    catch (e) { toast("削除できませんでした：" + e.message, 5000); }
+  }; });
+}
+function parseTime(s) {
+  s = String(s).trim();
+  if (/^\d+$/.test(s)) return +s;
+  const p = s.split(":").map(Number);
+  if (p.some(isNaN)) return null;
+  return p.reduce((a, n) => a * 60 + n, 0);
+}
+function parseScenes(text) {
+  return String(text || "").replace(/：/g, ":").split("\n").map(l => l.trim()).filter(Boolean).map(l => {
+    const m = l.match(/^(\S+)\s*(.*)$/); const t = parseTime(m[1].replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)));
+    return t == null ? null : {t, label:m[2] || ""};
+  }).filter(Boolean).sort((a, b) => a.t - b.t);
+}
+
+let toastTimer = null;
+function toast(msg, ms = 2500) {
+  document.querySelectorAll(".toast").forEach(x => x.remove()); clearTimeout(toastTimer);
+  const t = document.createElement("div"); t.className = "toast"; t.textContent = msg;
+  document.body.appendChild(t); toastTimer = setTimeout(() => t.remove(), ms);
+}
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") $("modalRoot").innerHTML = ""; });
+
+/* ---------- 設定（編集用パスワードの人だけ） ---------- */
+$("settingsBtn").onclick = () => modal(`<h3>設定</h3>
+  <div class="panel" style="margin-bottom:12px">
+    <h2>パスワード変更</h2>
+    <label class="field"><span>新しい編集用パスワード</span><input type="text" name="ep" autocomplete="off" minlength="8" required></label>
+    <label class="field"><span>新しい閲覧用パスワード</span><input type="text" name="vp" autocomplete="off" minlength="8" required></label>
+    <div class="hint">変更すると、今までのパスワードでは入れなくなります。スタッフに新しいパスワードを伝えてください。</div>
+  </div>
+  <div class="btnrow" style="justify-content:space-between">
+    <a class="btn" href="${esc(raw.rootUrl)}" target="_blank" rel="noopener">ドライブのフォルダを開く</a>
+    <span class="btnrow"><button type="button" class="btn" data-close>閉じる</button><button class="btn primary">変更する</button></span>
+  </div>`,
+  async (f) => {
+    const ep = val(f, "ep"), vp = val(f, "vp");
+    try {
+      await run("api_setPasswords", pw, ep, vp);
+      pw = ep; try { localStorage.setItem(PW_KEY, pw); } catch (e) {}
+      toast("パスワードを変更しました", 4000);
+    } catch (e) { toast(e.message, 5000); return false; }
+  });
+
+if (pw) load(); else showLogin();
+})();
+</script>
+</body>
+</html>
