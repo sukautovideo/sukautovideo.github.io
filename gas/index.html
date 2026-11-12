@@ -70,6 +70,8 @@ main{max-width:1100px;margin:0 auto;padding:14px 16px 140px}
 .card .sub{color:var(--sub);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card .foot{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .rank{flex:none;width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;border:2px solid currentColor}
+.rk{line-height:1;white-space:nowrap}
+.rk sup{font-size:.62em;vertical-align:top;margin-left:1px;line-height:1;font-weight:800;position:relative;top:-.05em}
 .rank.A{color:var(--rA)}.rank.B{color:var(--rB)}.rank.C{color:var(--rC)}.rank.D,.rank.none{color:var(--rD)}
 .yeartabs{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 12px;padding-bottom:2px}
 .ytab{flex:none;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:7px 14px;font-size:14px;font-weight:600;color:var(--sub)}
@@ -287,6 +289,12 @@ table.cmp td.best{font-weight:800;color:var(--accent)}
 "use strict";
 const POSITIONS = ["投手","捕手","一塁手","二塁手","三塁手","遊撃手","外野手","内野手"];
 const STATUSES = ["視察予定","要再視察","獲得候補","最優先","見送り"];
+/* 総合評価：A+〜D−の12段階（保存は "A+" "A" "A-"） */
+const RANKS = ["A+","A","A-","B+","B","B-","C+","C","C-","D+","D","D-"];
+const rankLetter = (r) => String(r || "").charAt(0);
+const rankOrder = (r) => { const i = RANKS.indexOf(r); return i < 0 ? 99 : i; };
+const rankLabel = (r) => String(r || "").replace("-", "−");
+const rankHtml = (r) => r ? `<span class="rk">${esc(rankLetter(r))}${r.length > 1 ? `<sup>${r.slice(1) === "+" ? "+" : "−"}</sup>` : ""}</span>` : "";
 const GRADES = {
   p: [["velo","球速"],["cmd","制球"],["brk","変化球"],["stuff","球のキレ"],["stam","スタミナ"]],
   f: [["hit","ミート"],["pow","パワー"],["run","走力"],["def","守備"],["arm","肩"]],
@@ -475,15 +483,15 @@ function renderList() {
   renderPosTabs(inYear);
   let list = inYear.filter(p => {
     if (!inPos(p, posSel)) return false;
-    if (rk && p.rank !== rk) return false;
+    if (rk && rankLetter(p.rank) !== rk) return false;
     if (fst && p.status !== fst) return false;
     if (!q) return true;
     return [p.name, p.kana, p.team, ...allPos(p), p.memo, p.scout, ...p.videos.map(v => v.title + " " + v.event)].join(" ").toLowerCase().includes(q);
   });
-  const rv = {A:0, B:1, C:2, D:3}, so = {"最優先":0,"獲得候補":1,"要再視察":2,"視察予定":3,"見送り":5};
+  const so = {"最優先":0,"獲得候補":1,"要再視察":2,"視察予定":3,"見送り":5};
   list.sort(sort === "name" ? (a, b) => (a.kana || a.name).localeCompare(b.kana || b.name, "ja")
-    : sort === "rank" ? (a, b) => (rv[a.rank] ?? 9) - (rv[b.rank] ?? 9) || latestDate(b).localeCompare(latestDate(a))
-    : sort === "status" ? (a, b) => (so[a.status] ?? 4) - (so[b.status] ?? 4) || (rv[a.rank] ?? 9) - (rv[b.rank] ?? 9)
+    : sort === "rank" ? (a, b) => rankOrder(a.rank) - rankOrder(b.rank) || latestDate(b).localeCompare(latestDate(a))
+    : sort === "status" ? (a, b) => (so[a.status] ?? 4) - (so[b.status] ?? 4) || rankOrder(a.rank) - rankOrder(b.rank)
     : (a, b) => latestDate(b).localeCompare(latestDate(a)) || (b.createdTime || "").localeCompare(a.createdTime || ""));
   $("count").textContent = `${list.length}人 / ${yearSel === "none" ? "年度未設定 " : (yearSel ? yearSel + "年度 " : "全")}${inYear.length}人`;
   if (!players.length) {
@@ -494,7 +502,7 @@ function renderList() {
   $("grid").innerHTML = list.map(p => {
     const ld = latestDate(p), m1 = measDefs(p).find(m => measVal(p, m) != null);
     return `<button class="card${sel.has(p.id) ? " sel" : ""}" data-id="${p.id}">
-      <span class="rank ${p.rank || "none"}">${esc(p.rank || "–")}</span>
+      <span class="rank ${rankLetter(p.rank) || "none"}">${p.rank ? rankHtml(p.rank) : "–"}</span>
       <span class="body">
         <div class="name">${esc(p.name)}</div>
         <div class="sub">${esc([p.team, posLabel(p), p.batsThrows].filter(Boolean).join(" ・ ") || "—")}</div>
@@ -532,7 +540,7 @@ function openPlayer(id, keep) {
     : `<div class="hint">動画がまだありません。${raw.canEdit ? "「＋ 動画をアップ」から追加するか、ドライブの「" + esc(p.name) + "」フォルダに入れてください。" : ""}</div>`;
   const rows = [["対象年度", p.year ? p.year + "年度" : ""], ["所属", p.team], ["ポジション", p.position], ["ほかに守れる", (p.subPos || []).join("・")], ["投打", p.batsThrows], ["学年・年齢", p.grade],
     ["身長・体重", p.body], ["総合評価", p.rank], ["担当スカウト", p.scout], ["ふりがな", p.kana]].filter(r => r[1]);
-  $("info").innerHTML = rows.map(r => `<dt>${r[0]}</dt><dd>${esc(r[1])}</dd>`).join("") || `<dd class="hint">未入力</dd>`;
+  $("info").innerHTML = rows.map(r => `<dt>${r[0]}</dt><dd>${r[0] === "総合評価" ? rankHtml(r[1]) : esc(r[1])}</dd>`).join("") || `<dd class="hint">未入力</dd>`;
   $("memo").textContent = p.memo || "—";
   $("dStatus").className = "st st-" + (p.status || ""); $("dStatus").textContent = p.status || "";
   const gd = gradeDefs(p).filter(([k]) => p.grades && p.grades[k]);
@@ -704,7 +712,7 @@ $("cmpGo").onclick = () => {
   row("", p => `<button type="button" class="btn ghost" style="padding:0" data-open="${p.id}"><b style="font-size:15px">${esc(p.name)}</b></button>`);
   [["対象年度","year"],["所属","team"],["ポジション","posLabel"],["投打","batsThrows"],["学年・年齢","grade"],["身長・体重","body"],["総合評価","rank"],["ステータス","status"],["担当","scout"]]
     .forEach(([l, k]) => { const g = (p) => k === "posLabel" ? posLabel(p) : p[k];
-      if (ps.some(p => g(p))) row(l, p => esc(g(p) || "—")); });
+      if (ps.some(p => g(p))) row(l, p => k === "rank" ? (p.rank ? rankHtml(p.rank) : "—") : esc(g(p) || "—")); });
   const gkeys = []; ps.forEach(p => gradeDefs(p).forEach(g => { if (!gkeys.some(x => x[0] === g[0])) gkeys.push(g); }));
   gkeys.forEach(([k, l]) => {
     if (!ps.some(p => p.grades && p.grades[k])) return;
@@ -808,7 +816,7 @@ function playerForm(id) {
       <label class="field"><span>身長・体重</span><input type="text" name="body" placeholder="180cm 80kg" value="${esc(p.body)}"></label>
     </div>
     <div class="two">
-      <label class="field"><span>総合評価</span><select name="rank"><option value="">—</option>${["A","B","C","D"].map(r => `<option ${p.rank === r ? "selected" : ""}>${r}</option>`).join("")}</select></label>
+      <label class="field"><span>総合評価</span><select name="rank"><option value="">—</option>${RANKS.map(r => `<option value="${r}" ${p.rank === r ? "selected" : ""}>${rankLabel(r)}</option>`).join("")}</select></label>
       <label class="field"><span>担当スカウト</span><input type="text" name="scout" value="${esc(p.scout)}"></label>
     </div>
     <label class="field"><span>ステータス</span><select name="status"><option value="">—</option>${STATUSES.map(s => `<option ${p.status === s ? "selected" : ""}>${s}</option>`).join("")}</select></label>
